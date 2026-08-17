@@ -1,0 +1,365 @@
+#define MyAppName "LeyoChat Server"
+#define MyAppVersion "@APP_VERSION@"
+#define MyAppPublisher "@APP_PUBLISHER@"
+#define MyAppId "@APP_ID@"
+#define MySourceDir "@STAGE_DIR@"
+#define MyOutputDir "@OUTPUT_DIR@"
+#define MyOutputBaseFilename "LeyoChatServer-@APP_VERSION@-setup"
+#define MyAppIconFile "@ICON_FILE@"
+#define MyLanguageFile "@LANGUAGE_FILE@"
+#define MyReleaseNotesFile "@RELEASE_NOTES_FILE@"
+#define MyServiceName "LeyoChatService"
+#define MyServiceDisplayName "LeyoChat Service"
+#define MyServiceExeName "LeyoChatService.exe"
+#define MyServiceHostExeName "LeyoChatServiceHost.exe"
+#define MyServicePort "8765"
+
+[Setup]
+AppId={#MyAppId}
+AppName={#MyAppName}
+AppVersion={#MyAppVersion}
+AppPublisher={#MyAppPublisher}
+VersionInfoCompany={#MyAppPublisher}
+VersionInfoDescription={#MyAppName} Installer
+VersionInfoProductName={#MyAppName}
+VersionInfoProductVersion={#MyAppVersion}
+DefaultDirName={autopf}\{#MyAppName}
+DefaultGroupName={#MyAppName}
+AllowNoIcons=yes
+Compression=lzma
+SolidCompression=yes
+WizardStyle=modern
+ArchitecturesAllowed=x64compatible
+ArchitecturesInstallIn64BitMode=x64compatible
+PrivilegesRequired=admin
+OutputDir={#MyOutputDir}
+OutputBaseFilename={#MyOutputBaseFilename}
+SetupLogging=yes
+DisableProgramGroupPage=yes
+DisableWelcomePage=no
+InfoBeforeFile={#MyReleaseNotesFile}
+UninstallDisplayIcon={app}\{#MyServiceHostExeName}
+CloseApplications=force
+RestartApplications=yes
+SetupIconFile={#MyAppIconFile}
+WizardSizePercent=110
+
+[Languages]
+Name: "chinesesimplified"; MessagesFile: "{#MyLanguageFile}"
+
+[Files]
+Source: "{#MySourceDir}\*"; DestDir: "{app}"; Flags: ignoreversion recursesubdirs createallsubdirs
+
+[Dirs]
+Name: "{commonappdata}\LeyoChat\Service"
+Name: "{commonappdata}\LeyoChat\Service\data"
+Name: "{commonappdata}\LeyoChat\Service\files"
+Name: "{commonappdata}\LeyoChat\Service\logs"
+
+[InstallDelete]
+Type: files; Name: "{app}\vc_redist.x64.exe"
+
+[UninstallRun]
+Filename: "sc.exe"; Parameters: "stop ""{#MyServiceName}"""; Flags: runhidden; RunOnceId: "StopLeyoChatService"
+Filename: "sc.exe"; Parameters: "delete ""{#MyServiceName}"""; Flags: runhidden; RunOnceId: "DeleteLeyoChatService"
+Filename: "netsh"; Parameters: "advfirewall firewall delete rule name=""{#MyServiceDisplayName}"""; Flags: runhidden; RunOnceId: "DeleteLeyoChatServiceFirewall"
+
+[Code]
+var
+  ServiceConfigPage: TInputQueryWizardPage;
+
+function ExecHidden(const FileName, Params: string): Boolean;
+var
+  ResultCode: Integer;
+begin
+  Result := Exec(FileName, Params, '', SW_HIDE, ewWaitUntilTerminated, ResultCode) and (ResultCode = 0);
+end;
+
+procedure ExecOrAbort(const FileName, Params, FailureMessage: string);
+begin
+  if not ExecHidden(FileName, Params) then
+  begin
+    Log('ERROR: ' + FailureMessage + ': ' + FileName + ' ' + Params);
+    MsgBox(FailureMessage, mbError, MB_OK);
+    Abort;
+  end;
+end;
+
+function JsonEscape(Value: string): string;
+begin
+  Result := Value;
+  StringChangeEx(Result, '\', '\\', True);
+  StringChangeEx(Result, '"', '\"', True);
+end;
+
+function PowerShellSingleQuoted(Value: string): string;
+begin
+  StringChangeEx(Value, '''', '''''', True);
+  Result := '''' + Value + '''';
+end;
+
+function GenerateInstallToken(): string;
+var
+  TokenPath: string;
+  Script: string;
+  Params: string;
+  TokenText: AnsiString;
+begin
+  TokenPath := ExpandConstant('{tmp}\leyochat-service-token.txt');
+  DeleteFile(TokenPath);
+  Script :=
+    '$bytes = New-Object byte[] 32; ' +
+    '$rng = [Security.Cryptography.RandomNumberGenerator]::Create(); ' +
+    'try { $rng.GetBytes($bytes) } finally { $rng.Dispose() }; ' +
+    '$token = -join ($bytes | ForEach-Object { $_.ToString(''x2'') }); ' +
+    '[IO.File]::WriteAllText(' + PowerShellSingleQuoted(TokenPath) +
+    ', $token, [Text.Encoding]::ASCII)';
+  Params :=
+    '-NoProfile -NonInteractive -ExecutionPolicy Bypass -Command "' +
+    Script + '"';
+
+  if not ExecHidden(
+      ExpandConstant('{sys}\WindowsPowerShell\v1.0\powershell.exe'),
+      Params) then
+  begin
+    MsgBox('Failed to generate a secure service credential.', mbError, MB_OK);
+    Abort;
+  end;
+  if not LoadStringFromFile(TokenPath, TokenText) then
+  begin
+    MsgBox('Failed to read the generated service credential.', mbError, MB_OK);
+    Abort;
+  end;
+  DeleteFile(TokenPath);
+  Result := Trim(String(TokenText));
+  if Length(Result) <> 64 then
+  begin
+    MsgBox('The generated service credential is invalid.', mbError, MB_OK);
+    Abort;
+  end;
+end;
+
+procedure InitializeWizard();
+begin
+  ServiceConfigPage := CreateInputQueryPage(
+    wpSelectDir,
+    'LeyoChat service connection',
+    'Configure the clients that may connect to this server.',
+    'Keep the generated credential private and provide these values only to authorized clients.');
+  ServiceConfigPage.Add('Workspace ID:', False);
+  ServiceConfigPage.Add('External server URL:', False);
+  ServiceConfigPage.Add('Client access credential:', False);
+  ServiceConfigPage.Values[0] := 'default';
+  ServiceConfigPage.Values[1] := 'http://localhost:{#MyServicePort}';
+  if not FileExists(
+      ExpandConstant('{commonappdata}\LeyoChat\Service\leyochat-service.json')) then
+    ServiceConfigPage.Values[2] := GenerateInstallToken();
+end;
+
+function ShouldSkipPage(PageID: Integer): Boolean;
+begin
+  Result := (PageID = ServiceConfigPage.ID) and
+    FileExists(ExpandConstant('{commonappdata}\LeyoChat\Service\leyochat-service.json'));
+end;
+
+function NextButtonClick(CurPageID: Integer): Boolean;
+var
+  ExternalUrl: string;
+begin
+  Result := True;
+  if CurPageID <> ServiceConfigPage.ID then
+    Exit;
+
+  if Trim(ServiceConfigPage.Values[0]) = '' then
+  begin
+    MsgBox('Workspace ID must not be empty.', mbError, MB_OK);
+    Result := False;
+    Exit;
+  end;
+  ExternalUrl := Trim(ServiceConfigPage.Values[1]);
+  if (ExternalUrl = '') or (Pos('://', ExternalUrl) = 0) then
+  begin
+    MsgBox('External server URL must include http:// or https://.', mbError, MB_OK);
+    Result := False;
+    Exit;
+  end;
+  if Length(Trim(ServiceConfigPage.Values[2])) < 32 then
+  begin
+    MsgBox('Client access credential must contain at least 32 characters.', mbError, MB_OK);
+    Result := False;
+  end;
+end;
+
+function ServiceDataRoot(): string;
+begin
+  Result := ExpandConstant('{commonappdata}\LeyoChat\Service');
+end;
+
+function ServiceDataPath(): string;
+begin
+  Result := ServiceDataRoot() + '\data';
+end;
+
+function ServiceFilesPath(): string;
+begin
+  Result := ServiceDataRoot() + '\files';
+end;
+
+function ServiceLogsPath(): string;
+begin
+  Result := ServiceDataRoot() + '\logs';
+end;
+
+function ServiceConfigPath(): string;
+begin
+  Result := ServiceDataRoot() + '\leyochat-service.json';
+end;
+
+function ServiceDatabasePath(): string;
+begin
+  Result := ServiceDataPath() + '\leyo-chat-service.db';
+end;
+
+procedure EnsureDirExists(const DirPath: string);
+begin
+  if not DirExists(DirPath) then
+    ForceDirectories(DirPath);
+end;
+
+function DefaultServiceConfigJson(): string;
+begin
+  Result :=
+    '{' + #13#10 +
+    '  "configVersion": 1,' + #13#10 +
+    '  "listen": {' + #13#10 +
+    '    "port": {#MyServicePort}' + #13#10 +
+    '  },' + #13#10 +
+    '  "database": {' + #13#10 +
+    '    "path": "' + JsonEscape(ServiceDatabasePath()) + '"' + #13#10 +
+    '  },' + #13#10 +
+    '  "storage": {' + #13#10 +
+    '    "path": "' + JsonEscape(ServiceFilesPath()) + '"' + #13#10 +
+    '  },' + #13#10 +
+    '  "auth": {' + #13#10 +
+    '    "token": "' + JsonEscape(Trim(ServiceConfigPage.Values[2])) + '",' + #13#10 +
+    '    "legacyFileAccess": false,' + #13#10 +
+    '    "workspaces": ["' + JsonEscape(Trim(ServiceConfigPage.Values[0])) + '"]' + #13#10 +
+    '  },' + #13#10 +
+    '  "sessions": {' + #13#10 +
+    '    "ttlSeconds": 120' + #13#10 +
+    '  },' + #13#10 +
+    '  "rateLimit": {' + #13#10 +
+    '    "maxRequestsPerWindow": 600,' + #13#10 +
+    '    "windowMs": 60000' + #13#10 +
+    '  },' + #13#10 +
+    '  "onlyOffice": {' + #13#10 +
+    '    "url": "http://localhost:8088",' + #13#10 +
+    '    "jwtSecret": ""' + #13#10 +
+    '  },' + #13#10 +
+    '  "externalUrl": "' + JsonEscape(Trim(ServiceConfigPage.Values[1])) + '",' + #13#10 +
+    '  "chatFiles": {' + #13#10 +
+    '    "ttlDays": 7,' + #13#10 +
+    '    "quotaMb": 2048' + #13#10 +
+    '  }' + #13#10 +
+    '}' + #13#10;
+end;
+
+procedure EnsureDefaultServiceConfig();
+begin
+  EnsureDirExists(ServiceDataRoot());
+  EnsureDirExists(ServiceDataPath());
+  EnsureDirExists(ServiceFilesPath());
+  EnsureDirExists(ServiceLogsPath());
+  if not FileExists(ServiceConfigPath()) then
+  begin
+    if not SaveStringToFile(ServiceConfigPath(), DefaultServiceConfigJson(), False) then
+    begin
+      MsgBox('Failed to write LeyoChat service config: ' + ServiceConfigPath(),
+             mbError, MB_OK);
+      Abort;
+    end;
+  end;
+end;
+
+function ScEscapedQuote(const Value: string): string;
+begin
+  Result := '\"' + Value + '\"';
+end;
+
+function ServiceBinaryPathForSc(): string;
+begin
+  Result :=
+    ScEscapedQuote(ExpandConstant('{app}\{#MyServiceHostExeName}')) +
+    ' --service' +
+    ' --service-exe ' +
+    ScEscapedQuote(ExpandConstant('{app}\{#MyServiceExeName}')) +
+    ' --config ' +
+    ScEscapedQuote(ServiceConfigPath());
+end;
+
+procedure InstallOrUpdateService();
+var
+  CreateParams: string;
+begin
+  ExecHidden('sc.exe', 'stop "{#MyServiceName}"');
+  ExecHidden('sc.exe', 'delete "{#MyServiceName}"');
+
+  CreateParams :=
+    'create "{#MyServiceName}"' +
+    ' binPath= "' + ServiceBinaryPathForSc() + '"' +
+    ' start= auto' +
+    ' DisplayName= "{#MyServiceDisplayName}"';
+  ExecOrAbort('sc.exe', CreateParams, 'Failed to register LeyoChat service');
+
+  ExecHidden('sc.exe',
+    'description "{#MyServiceName}" "LeyoChat unified file and message backend"');
+  ExecOrAbort('sc.exe',
+    'failure "LeyoChatService" reset= 300 actions= restart/60000/restart/60000/restart/300000',
+    'Failed to configure LeyoChat service recovery');
+  ExecHidden('sc.exe', 'failureflag "LeyoChatService" 1');
+end;
+
+procedure ConfigureFirewall();
+begin
+  ExecHidden('netsh',
+    'advfirewall firewall delete rule name="{#MyServiceDisplayName}"');
+  ExecOrAbort('netsh',
+    'advfirewall firewall add rule name="{#MyServiceDisplayName}" dir=in action=allow protocol=TCP localport={#MyServicePort} enable=yes profile=any',
+    'Failed to configure LeyoChat service firewall rule');
+end;
+
+procedure StartInstalledService();
+begin
+  ExecOrAbort('sc.exe',
+    'start "{#MyServiceName}"',
+    'Failed to start LeyoChat service');
+end;
+
+function PrepareToInstall(var NeedsRestart: Boolean): string;
+begin
+  Result := '';
+  NeedsRestart := False;
+  ExecHidden('sc.exe', 'stop "{#MyServiceName}"');
+end;
+
+procedure CurStepChanged(CurStep: TSetupStep);
+begin
+  if CurStep = ssPostInstall then
+  begin
+    EnsureDefaultServiceConfig();
+    InstallOrUpdateService();
+    ConfigureFirewall();
+    StartInstalledService();
+  end;
+end;
+
+procedure CurUninstallStepChanged(CurUninstallStep: TUninstallStep);
+begin
+  if CurUninstallStep = usUninstall then
+  begin
+    ExecHidden('sc.exe', 'stop "{#MyServiceName}"');
+    ExecHidden('sc.exe', 'delete "{#MyServiceName}"');
+    ExecHidden('netsh',
+      'advfirewall firewall delete rule name="{#MyServiceDisplayName}"');
+  end;
+end;

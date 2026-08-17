@@ -1,0 +1,92 @@
+; LeyoChat SFX Wrapper
+; 将 Qt Quick UI + 原始 Inno Setup 安装器打包成单个 .exe
+; 流程：解压到临时目录 → 启动 Qt Quick UI → UI 调用原始 Inno Setup /VERYSILENT
+
+#define MyAppName "LeyoChat"
+#define MyAppVersion "__APP_VERSION__"
+#define MyAppPublisher "__APP_PUBLISHER__"
+#define MySourceDir "__INSTALLER_PACKAGE_DIR__"
+#define MyOutputDir "__OUTPUT_DIR__"
+#define MyOutputBaseFilename "LeyoChat-__APP_VERSION__-setup"
+#define MyAppIconFile "__ICON_FILE__"
+
+[Setup]
+AppId={{4A2F16E7-8A48-4B0E-9E4F-E6B26D6BC68C}-SFX}
+AppName={#MyAppName} Setup
+AppVersion={#MyAppVersion}
+AppPublisher={#MyAppPublisher}
+DefaultDirName={tmp}\LeyoChatSfx
+; 禁用所有向导页 — SFX 纯后台解压
+DisableWelcomePage=yes
+DisableDirPage=yes
+DisableProgramGroupPage=yes
+DisableReadyPage=yes
+DisableFinishedPage=yes
+DisableReadyMemo=yes
+; 不创建卸载程序 — 卸载由原始 Inno Setup 安装器管理
+Uninstallable=no
+CreateUninstallRegKey=no
+; 压缩
+Compression=lzma2/ultra64
+SolidCompression=yes
+; 外观
+OutputDir={#MyOutputDir}
+OutputBaseFilename={#MyOutputBaseFilename}
+SetupIconFile={#MyAppIconFile}
+; 权限
+PrivilegesRequired=admin
+ArchitecturesAllowed=x64compatible
+ArchitecturesInstallIn64BitMode=x64compatible
+
+[Files]
+Source: "{#MySourceDir}\*"; DestDir: "{tmp}\LeyoChatSfx"; Flags: ignoreversion recursesubdirs createallsubdirs
+
+[Code]
+// Inno Setup 在所有 wizard 页面禁用时仍强制显示 Ready to Install 页面。
+// 下面两个函数隐藏 wizard 窗口并自动跳过该页面，使 SFX 解压过程对用户完全不可见。
+
+procedure InitializeWizard();
+begin
+  // 把 wizard 窗口移到屏幕外 + 尺寸归零
+  WizardForm.Left := -32000;
+  WizardForm.Top := -32000;
+  WizardForm.ClientWidth := 0;
+  WizardForm.ClientHeight := 0;
+end;
+
+procedure CurPageChanged(CurPageID: Integer);
+begin
+  // Ready 页面出现时自动点击"安装"按钮
+  if CurPageID = wpReady then
+    WizardForm.NextButton.OnClick(WizardForm);
+end;
+
+procedure CurStepChanged(CurStep: TSetupStep);
+var
+  UiExe: string;
+  InnerSetup: string;
+  ResultCode: Integer;
+begin
+  if CurStep = ssPostInstall then
+  begin
+    UiExe := ExpandConstant('{tmp}\LeyoChatSfx\LeyoChatSetup.exe');
+    InnerSetup := ExpandConstant('{tmp}\LeyoChatSfx\LeyoChat-inner-setup.exe');
+    if FileExists(UiExe) and FileExists(InnerSetup) then
+    begin
+      // 启动 Qt Quick UI，传入原始 Inno Setup 安装器路径
+      Exec(UiExe,
+           '--inner-setup "' + InnerSetup + '"' +
+           ' --app-version "' + '{#MyAppVersion}' + '"',
+           ExpandConstant('{tmp}\LeyoChatSfx'),
+           SW_SHOWNORMAL, ewWaitUntilTerminated, ResultCode);
+    end
+    else if FileExists(InnerSetup) then
+    begin
+      // 降级：Qt Quick UI 缺失时直接运行原始安装器（正常向导模式）
+      Exec(InnerSetup, '', ExpandConstant('{tmp}\LeyoChatSfx'),
+           SW_SHOWNORMAL, ewWaitUntilTerminated, ResultCode);
+    end
+    else
+      MsgBox('Error: Installer files not found.', mbError, MB_OK);
+  end;
+end;

@@ -1,0 +1,13 @@
+<RCC>
+    <qresource prefix="/app">
+        <file alias="leyochat-icon.png">leyochat-icon.png</file>
+    </qresource>
+    <qresource prefix="/docs/release-notes">
+        <file alias="current.txt">../release-notes/installer-release-notes.txt</file>
+    </qresource>
+    <qresource prefix="/sounds">
+        <file alias="ringback.wav">../resources/sounds/ringback.wav</file>
+        <file alias="ringtone.wav">../resources/sounds/ringtone.wav</file>
+        <file alias="hangup.wav">../resources/sounds/hangup.wav</file>
+    </qresource>
+</RCC>

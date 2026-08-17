@@ -1,0 +1,193 @@
+#define MyAppName "LeyoChat"
+#define MyAppVersion "@APP_VERSION@"
+#define MyAppPublisher "@APP_PUBLISHER@"
+#define MyAppExeName "LeyoChat.exe"
+#define MyLauncherExeName "LeyoChatLauncher.exe"
+#define MyAppId "@APP_ID@"
+#define MySourceDir "@STAGE_DIR@"
+#define MyOutputDir "@OUTPUT_DIR@"
+#define MyOutputBaseFilename "LeyoChat-@APP_VERSION@-setup"
+#define MyAppIconFile "@ICON_FILE@"
+#define MyLanguageFile "@LANGUAGE_FILE@"
+#define MyReleaseNotesFile "@RELEASE_NOTES_FILE@"
+
+[Setup]
+AppId={#MyAppId}
+AppName={#MyAppName}
+AppVersion={#MyAppVersion}
+AppPublisher={#MyAppPublisher}
+VersionInfoCompany={#MyAppPublisher}
+VersionInfoDescription={#MyAppName} Installer
+VersionInfoProductName={#MyAppName}
+VersionInfoProductVersion={#MyAppVersion}
+DefaultDirName={autopf}\{#MyAppName}
+DefaultGroupName={#MyAppName}
+AllowNoIcons=yes
+Compression=lzma
+SolidCompression=yes
+WizardStyle=modern
+ArchitecturesAllowed=x64compatible
+ArchitecturesInstallIn64BitMode=x64compatible
+PrivilegesRequired=admin
+OutputDir={#MyOutputDir}
+OutputBaseFilename={#MyOutputBaseFilename}
+SetupLogging=yes
+DisableProgramGroupPage=yes
+DisableWelcomePage=no
+InfoBeforeFile={#MyReleaseNotesFile}
+UninstallDisplayIcon={app}\{#MyAppExeName}
+CloseApplications=force
+RestartApplications=yes
+SetupIconFile={#MyAppIconFile}
+WizardSizePercent=110
+
+[Languages]
+Name: "chinesesimplified"; MessagesFile: "{#MyLanguageFile}"
+
+[Tasks]
+Name: "desktopicon"; Description: "{cm:CreateDesktopIcon}"; GroupDescription: "{cm:AdditionalIcons}"; Flags: unchecked
+Name: "autostart"; Description: "Start LeyoChat when Windows starts"; GroupDescription: "Startup options"; Flags: checkedonce
+
+[Files]
+Source: "{#MySourceDir}\*"; DestDir: "{app}"; Flags: ignoreversion recursesubdirs createallsubdirs
+
+[InstallDelete]
+; Clean up MinGW runtime DLLs left over from older (MinGW-built) installs.
+Type: files; Name: "{app}\libgcc_s_seh-1.dll"
+Type: files; Name: "{app}\libstdc++-6.dll"
+Type: files; Name: "{app}\libwinpthread-1.dll"
+; vc_redist.x64.exe is not needed because individual MSVC runtime DLLs are shipped.
+Type: files; Name: "{app}\vc_redist.x64.exe"
+
+[Icons]
+Name: "{autoprograms}\{#MyAppName}"; Filename: "{app}\{#MyLauncherExeName}"
+Name: "{autodesktop}\{#MyAppName}"; Filename: "{app}\{#MyLauncherExeName}"; Tasks: desktopicon
+
+[Run]
+Filename: "netsh"; Parameters: "advfirewall firewall delete rule name=""{#MyAppName}"""; Flags: runhidden
+Filename: "netsh"; Parameters: "advfirewall firewall add rule name=""{#MyAppName}"" dir=in action=allow program=""{app}\{#MyAppExeName}"" enable=yes profile=any"; Flags: runhidden
+Filename: "netsh"; Parameters: "advfirewall firewall add rule name=""{#MyAppName}"" dir=out action=allow program=""{app}\{#MyAppExeName}"" enable=yes profile=any"; Flags: runhidden
+Filename: "netsh"; Parameters: "advfirewall firewall delete rule name=""{#MyAppName}-UDP"""; Flags: runhidden
+Filename: "netsh"; Parameters: "advfirewall firewall add rule name=""{#MyAppName}-UDP"" dir=in action=allow protocol=UDP localport=45454 enable=yes profile=any"; Flags: runhidden
+Filename: "{app}\{#MyLauncherExeName}"; Description: "{cm:LaunchProgram,{#MyAppName}}"; Flags: nowait postinstall skipifsilent runasoriginaluser
+
+[Registry]
+Root: HKCU; Subkey: "Software\Microsoft\Windows\CurrentVersion\Run"; ValueType: string; ValueName: "LeyoChat"; ValueData: """{app}\{#MyLauncherExeName}"""; Flags: uninsdeletevalue; Tasks: autostart
+
+[UninstallRun]
+Filename: "netsh"; Parameters: "advfirewall firewall delete rule name=""{#MyAppName}"""; Flags: runhidden; RunOnceId: "DelFirewall"
+Filename: "netsh"; Parameters: "advfirewall firewall delete rule name=""{#MyAppName}-UDP"""; Flags: runhidden; RunOnceId: "DelFirewallUDP"
+
+[Code]
+var
+  RemoveUserData: Boolean;
+
+function DeleteDirIfExists(const DirPath: string): Boolean;
+begin
+  if DirExists(DirPath) then
+    Result := DelTree(DirPath, True, True, True)
+  else
+    Result := True;
+end;
+
+function ExecHidden(const FileName, Params: string): Boolean;
+var
+  ResultCode: Integer;
+begin
+  Result := Exec(FileName, Params, '', SW_HIDE, ewWaitUntilTerminated, ResultCode) and (ResultCode = 0);
+end;
+
+function IsProcessRunningByName(const ImageName: string): Boolean;
+var
+  Locator, Services, Processes: Variant;
+begin
+  Result := True;
+  try
+    Locator := CreateOleObject('WbemScripting.SWbemLocator');
+    Services := Locator.ConnectServer('.', 'root\cimv2');
+    Processes := Services.ExecQuery(
+      'SELECT * FROM Win32_Process WHERE Name = ''' + ImageName + '''');
+    Result := Processes.Count > 0;
+  except
+    Result := True;
+  end;
+end;
+
+function StopRunningLeyoChatProcesses(): Boolean;
+begin
+  // Do not use /T: during self-update the SFX wrapper, Qt setup UI, and inner
+  // setup can share a process tree.
+  if IsProcessRunningByName('{#MyLauncherExeName}') then
+    ExecHidden('taskkill.exe', '/IM "{#MyLauncherExeName}" /F');
+  Sleep(250);
+  if IsProcessRunningByName('{#MyLauncherExeName}') then
+  begin
+    Result := False;
+    Exit;
+  end;
+
+  if IsProcessRunningByName('{#MyAppExeName}') then
+    ExecHidden('taskkill.exe', '/IM "{#MyAppExeName}" /F');
+  Sleep(250);
+  Result := not IsProcessRunningByName('{#MyAppExeName}');
+end;
+
+procedure RemoveLegacyFileServiceRegistration();
+begin
+  // Older client installers could register a local file service task or service.
+  // The unified backend is now delivered by the separate server installer, so
+  // client upgrades should stop and unregister the old local entrypoints without
+  // deleting their ProgramData payload.
+  ExecHidden('schtasks.exe', '/end /tn "LeyoFileService"');
+  ExecHidden('schtasks.exe', '/delete /f /tn "LeyoFileService"');
+  ExecHidden('sc.exe', 'stop "LeyoFileService"');
+  ExecHidden('sc.exe', 'delete "LeyoFileService"');
+  ExecHidden('netsh',
+    'advfirewall firewall delete rule name="LeyoChat File Service"');
+end;
+
+function PrepareToInstall(var NeedsRestart: Boolean): String;
+begin
+  Result := '';
+  NeedsRestart := False;
+  if not StopRunningLeyoChatProcesses() then
+  begin
+    Result := 'Could not stop LeyoChat processes. Please exit LeyoChat and try again.';
+    Exit;
+  end;
+  RemoveLegacyFileServiceRegistration();
+end;
+
+procedure CurUninstallStepChanged(CurUninstallStep: TUninstallStep);
+var
+  Choice: Integer;
+begin
+  if CurUninstallStep = usUninstall then
+  begin
+    if not StopRunningLeyoChatProcesses() then
+    begin
+      MsgBox('Could not stop LeyoChat processes. Please exit LeyoChat and try again.',
+             mbError, MB_OK);
+      Abort;
+    end;
+    Choice :=
+      MsgBox('Remove local LeyoChat data too?' + #13#10#13#10 +
+             'Yes: uninstall app and remove chat data.' + #13#10 +
+             'No: uninstall app but keep chat data.' + #13#10 +
+             'Cancel: stop uninstall.',
+             mbConfirmation, MB_YESNOCANCEL);
+    if Choice = IDCANCEL then
+      Abort;
+    RemoveUserData := (Choice = IDYES);
+  end;
+
+  if CurUninstallStep = usPostUninstall then
+  begin
+    RemoveLegacyFileServiceRegistration();
+    if RemoveUserData then
+    begin
+      DeleteDirIfExists(ExpandConstant('{localappdata}\LeyoChat\LeyoChat'));
+      DeleteDirIfExists(ExpandConstant('{appdata}\LeyoChat\LeyoChat'));
+    end;
+  end;
+end;

@@ -1,0 +1,74 @@
+# ============================================================
+# LeyoChat .gitignore
+# ============================================================
+
+# --- 构建产物 ---
+build/
+build-*/
+build-tests/
+build-tests-msvc/
+
+# --- 工具链（本地安装，不纳入版本控制） ---
+CMake/
+Qt/
+InnoSetup6/
+
+# --- 编辑器和 IDE ---
+.vs/
+.vscode/
+*.user
+*.suo
+*.sln.docstates
+CMakeUserPresets.json
+
+# --- 操作系统临时文件 ---
+Thumbs.db
+Desktop.ini
+.DS_Store
+
+# --- C++ 编译中间产物 ---
+*.obj
+*.o
+*.d
+*.lib
+*.a
+*.pdb
+*.ilk
+*.exp
+
+# --- Qt 自动生成 ---
+*_autogen/
+moc_*.cpp
+ui_*.h
+qrc_*.cpp
+
+# --- 安装包产物 ---
+*.exe
+!windows/*.ico
+
+# --- 日志和临时文件 ---
+*.log
+*.dmp
+*.dump
+*.db
+*.sqlite
+*.sqlite3
+
+# --- 本地环境变量和凭证 ---
+.env
+.env.*
+!.env.example
+
+*.pfx
+*.p12
+*.pem
+*.key
+*.crt
+*.cer
+*.tmp
+build-msvc/
+tmp*.png
+recovery/
+!src/recovery/
+!src/recovery/**
+.sandbox/

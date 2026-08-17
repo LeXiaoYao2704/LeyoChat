@@ -1,0 +1,19 @@
+{
+  "id": "default",
+  "name": "默认表情包",
+  "icon": "laugh.gif",
+  "stickers": [
+    { "id": "laugh",    "file": "laugh.gif",    "emoji": "😂", "label": "大笑" },
+    { "id": "cry",      "file": "cry.gif",      "emoji": "😭", "label": "哭泣" },
+    { "id": "thumbsup", "file": "thumbsup.gif", "emoji": "👍", "label": "点赞" },
+    { "id": "heart",    "file": "heart.gif",    "emoji": "❤️", "label": "爱心" },
+    { "id": "clap",     "file": "clap.gif",     "emoji": "👏", "label": "鼓掌" },
+    { "id": "wave",     "file": "wave.gif",     "emoji": "👋", "label": "挥手" },
+    { "id": "think",    "file": "think.gif",    "emoji": "🤔", "label": "思考" },
+    { "id": "angry",    "file": "angry.gif",    "emoji": "😠", "label": "生气" },
+    { "id": "cool",     "file": "cool.gif",     "emoji": "😎", "label": "酷" },
+    { "id": "sad",      "file": "sad.gif",      "emoji": "😢", "label": "难过" },
+    { "id": "shock",    "file": "shock.gif",    "emoji": "😱", "label": "震惊" },
+    { "id": "ok",       "file": "ok.gif",       "emoji": "👌", "label": "OK" }
+  ]
+}
