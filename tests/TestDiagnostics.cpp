@@ -332,8 +332,18 @@ void TestDiagnostics::exportBundle_includesIntegrationSnapshotWhenPresent()
     devOpsSettings.lastPollErrorMessage = QStringLiteral("none");
     devOpsSettings.lastPollErrorCategory = QStringLiteral("unknown");
     devOpsSettings.consecutivePollFailures = 0;
-    devOpsSettings.notificationTargets.push_back(
-        {QStringLiteral("org-a"), QStringLiteral("Project-1"), true, 77, 88, 99, QStringLiteral("succeeded"), 444, 555, QString(), QStringLiteral("network"), 0});
+    AzureDevOpsNotificationTarget notificationTarget;
+    notificationTarget.organization = QStringLiteral("org-a");
+    notificationTarget.project = QStringLiteral("Project-1");
+    notificationTarget.enabled = true;
+    notificationTarget.lastNotifiedBuildId = 77;
+    notificationTarget.lastNotifiedPullRequestUpdatedAtMs = 88;
+    notificationTarget.lastNotifiedAssignedWorkItemUpdatedAtMs = 99;
+    notificationTarget.lastNotifiedBuildResult = QStringLiteral("succeeded");
+    notificationTarget.lastPollAttemptAtMs = 444;
+    notificationTarget.lastPollSuccessAtMs = 555;
+    notificationTarget.lastPollErrorCategory = QStringLiteral("network");
+    devOpsSettings.notificationTargets.push_back(notificationTarget);
 
     OutlookConnectionSettings outlookSettings;
     outlookSettings.enabled = true;

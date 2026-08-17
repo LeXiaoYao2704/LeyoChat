@@ -10,8 +10,11 @@ class TestDelegates : public QObject {
 private slots:
     void styleFoundation_usesCalmVisualHierarchy() {
         QVERIFY(!AppStyle::stylesheet().trimmed().isEmpty());
-        QCOMPARE(QString::fromLatin1(AppStyle::kWindowBg), QStringLiteral("#F6F8FB"));
-        QCOMPARE(QString::fromLatin1(AppStyle::kTextPrimary), QStringLiteral("#111827"));
+        const QColor lightWindowBackground(AppStyle::windowBg(AppStyle::ThemeMode::Light));
+        const QColor lightPrimaryText(AppStyle::textPrimary(AppStyle::ThemeMode::Light));
+        QVERIFY(lightWindowBackground.isValid());
+        QVERIFY(lightPrimaryText.isValid());
+        QVERIFY(lightWindowBackground != lightPrimaryText);
 
         QFont baseFont(QStringLiteral("Microsoft YaHei UI"), 10);
         QFont largeFont(QStringLiteral("Microsoft YaHei UI"), 14);

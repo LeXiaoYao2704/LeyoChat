@@ -274,6 +274,7 @@ void TestAzureDevOpsBuildNotificationPoller::emitsNotificationForNewPullRequest(
     settings.organization = QStringLiteral("leyochat");
     settings.project = QStringLiteral("LeyoChat");
     settings.personalAccessToken = QStringLiteral("token");
+    settings.currentUserId = QStringLiteral("user-42");
     settings.notificationsEnabled = true;
 
     const QJsonDocument document(QJsonObject{
@@ -315,6 +316,7 @@ void TestAzureDevOpsBuildNotificationPoller::emitsReviewRequestedNotificationFor
     settings.organization = QStringLiteral("leyochat");
     settings.project = QStringLiteral("LeyoChat");
     settings.personalAccessToken = QStringLiteral("token");
+    settings.currentUserId = QStringLiteral("user-42");
     settings.notificationsEnabled = true;
 
     const QJsonDocument document(QJsonObject{
@@ -369,6 +371,14 @@ void TestAzureDevOpsBuildNotificationPoller::emitsNotificationForAssignedWorkIte
                          QJsonObject{
                              {QStringLiteral("revisedDate"), QStringLiteral("2026-04-11T13:00:00Z")},
                              {QStringLiteral("revisedBy"), QJsonObject{{QStringLiteral("displayName"), QStringLiteral("Dana")}}},
+                             {QStringLiteral("fields"),
+                              QJsonObject{
+                                  {QStringLiteral("System.AssignedTo"),
+                                   QJsonObject{
+                                       {QStringLiteral("newValue"),
+                                        QJsonObject{{QStringLiteral("displayName"), QStringLiteral("Owner")}}},
+                                   }},
+                              }},
                          },
                      }},
                 });
@@ -423,10 +433,10 @@ void TestAzureDevOpsBuildNotificationPoller::emitsNotificationForAssignedWorkIte
     qint64 latestObservedUpdatedAtMs = 0;
     const auto event = poller.pollLatestAssignedWorkItem(0, &latestObservedUpdatedAtMs, nullptr);
     QVERIFY(event.has_value());
-    QCOMPARE(event->kind, AzureDevOpsNotificationKind::WorkItemCommented);
+    QCOMPARE(event->kind, AzureDevOpsNotificationKind::WorkItemAssignedToMe);
     QCOMPARE(event->resourceId, QStringLiteral("work-item:123"));
     QCOMPARE(event->title, QStringLiteral("Assigned work item"));
-    QCOMPARE(event->summary, QStringLiteral("工作项有新的评论"));
+    QCOMPARE(event->summary, QStringLiteral("工作项已分配给你"));
     QVERIFY(latestObservedUpdatedAtMs > 0);
 }
 
@@ -697,8 +707,13 @@ void TestAzureDevOpsBuildNotificationPoller::emitsBuildRecoveredWhenSuccessfulBu
     settings.project = QStringLiteral("Project-1");
     settings.personalAccessToken = QStringLiteral("token");
     settings.notificationsEnabled = true;
-    settings.notificationTargets.push_back(
-        {QStringLiteral("org-a"), QStringLiteral("Project-1"), true, 180, 0, 0, QStringLiteral("failed")});
+    AzureDevOpsNotificationTarget target;
+    target.organization = QStringLiteral("org-a");
+    target.project = QStringLiteral("Project-1");
+    target.enabled = true;
+    target.lastNotifiedBuildId = 180;
+    target.lastNotifiedBuildResult = QStringLiteral("failed");
+    settings.notificationTargets.push_back(target);
 
     AzureDevOpsBuildNotificationPoller poller(
         settings,
@@ -766,6 +781,11 @@ void TestAzureDevOpsBuildNotificationPoller::pollsTrackedNotificationsAcrossBuil
                          QJsonObject{
                              {QStringLiteral("revisedDate"), QStringLiteral("2026-04-11T13:00:00Z")},
                              {QStringLiteral("revisedBy"), QJsonObject{{QStringLiteral("displayName"), QStringLiteral("Reviewer")}}},
+                             {QStringLiteral("fields"),
+                              QJsonObject{
+                                  {QStringLiteral("System.History"),
+                                   QJsonObject{{QStringLiteral("newValue"), QStringLiteral("New comment")}}},
+                              }},
                          },
                      }},
                 });
@@ -807,6 +827,7 @@ void TestAzureDevOpsBuildNotificationPoller::pollsTrackedNotificationsAcrossBuil
     settings.organization = QStringLiteral("org-a");
     settings.project = QStringLiteral("Project-1");
     settings.personalAccessToken = QStringLiteral("token");
+    settings.currentUserId = QStringLiteral("user-42");
     settings.notificationsEnabled = true;
     settings.notificationTargets.push_back(
         {QStringLiteral("org-a"), QStringLiteral("Project-1"), true, 100, 0, 0});

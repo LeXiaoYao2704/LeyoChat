@@ -89,12 +89,12 @@ void TestLocalAzureDevOpsAdapter::workItemLink_resolvesStructuredPayload()
         QJsonDocument(QJsonObject{
             {QStringLiteral("id"), 1234},
             {QStringLiteral("fields"), QJsonObject{
-                {QStringLiteral("System.Title"), QStringLiteral("修复群文件状态卡�?)},
-                {QStringLiteral("System.State"), QStringLiteral("进行�?)},
+                {QStringLiteral("System.Title"), QStringLiteral("Fix group file status card")},
+                {QStringLiteral("System.State"), QStringLiteral("Active")},
                 {QStringLiteral("System.WorkItemType"), QStringLiteral("Bug")},
                 {QStringLiteral("System.TeamProject"), QStringLiteral("LeyoChat")},
                 {QStringLiteral("System.AssignedTo"), QJsonObject{
-                    {QStringLiteral("displayName"), QStringLiteral("张小�?)},
+                    {QStringLiteral("displayName"), QStringLiteral("Test User")},
                 }},
             }},
             {QStringLiteral("_links"), QJsonObject{
@@ -113,8 +113,8 @@ void TestLocalAzureDevOpsAdapter::workItemLink_resolvesStructuredPayload()
     QVERIFY2(payload.has_value(), qPrintable(errorMessage));
     QCOMPARE(payload->kind, QStringLiteral("devops_work_item"));
     QCOMPARE(payload->resourceId, QStringLiteral("work-item:1234"));
-    QCOMPARE(payload->title, QStringLiteral("修复群文件状态卡�?));
-    QCOMPARE(payload->status, QStringLiteral("进行�?));
+    QCOMPARE(payload->title, QStringLiteral("Fix group file status card"));
+    QCOMPARE(payload->status, QStringLiteral("Active"));
     QCOMPARE(payload->actions.size(), 1);
     QCOMPARE(payload->actions.front().target,
              QStringLiteral("https://dev.azure.com/leyochat/LeyoChat/_workitems/edit/1234"));
@@ -131,7 +131,7 @@ void TestLocalAzureDevOpsAdapter::pullRequestLink_resolvesStructuredPayload()
             {QStringLiteral("title"), QStringLiteral("接入 stage2 resource_ref 卡片")},
             {QStringLiteral("status"), QStringLiteral("active")},
             {QStringLiteral("createdBy"), QJsonObject{
-                {QStringLiteral("displayName"), QStringLiteral("侯晓�?)},
+                {QStringLiteral("displayName"), QStringLiteral("Review User")},
             }},
             {QStringLiteral("repository"), QJsonObject{
                 {QStringLiteral("name"), QStringLiteral("desktop")},
@@ -175,7 +175,7 @@ void TestLocalAzureDevOpsAdapter::buildLink_resolvesStructuredPayload()
                 {QStringLiteral("name"), QStringLiteral("LeyoChat")},
             }},
             {QStringLiteral("requestedFor"), QJsonObject{
-                {QStringLiteral("displayName"), QStringLiteral("乔志�?)},
+                {QStringLiteral("displayName"), QStringLiteral("Build User")},
             }},
             {QStringLiteral("_links"), QJsonObject{
                 {QStringLiteral("web"), QJsonObject{
@@ -245,10 +245,10 @@ void TestLocalAzureDevOpsAdapter::manualLocator_resolvesStructuredPayload()
         QStringLiteral("https://dev.azure.com/leyochat/LeyoChat/_apis/git/repositories/desktop/pullRequests/109?api-version=7.0"),
         QJsonDocument(QJsonObject{
             {QStringLiteral("pullRequestId"), 109},
-            {QStringLiteral("title"), QStringLiteral("�?Azure DevOps 插卡增加手动模式")},
+            {QStringLiteral("title"), QStringLiteral("Add manual Azure DevOps card mode")},
             {QStringLiteral("status"), QStringLiteral("active")},
             {QStringLiteral("createdBy"), QJsonObject{
-                {QStringLiteral("displayName"), QStringLiteral("侯晓�?)},
+                {QStringLiteral("displayName"), QStringLiteral("Review User")},
             }},
             {QStringLiteral("repository"), QJsonObject{
                 {QStringLiteral("name"), QStringLiteral("desktop")},
@@ -278,7 +278,7 @@ void TestLocalAzureDevOpsAdapter::manualLocator_resolvesStructuredPayload()
     QVERIFY2(payload.has_value(), qPrintable(errorMessage));
     QCOMPARE(payload->kind, QStringLiteral("devops_pull_request"));
     QCOMPARE(payload->resourceId, QStringLiteral("pull-request:desktop:109"));
-    QCOMPARE(payload->title, QStringLiteral("�?Azure DevOps 插卡增加手动模式"));
+    QCOMPARE(payload->title, QStringLiteral("Add manual Azure DevOps card mode"));
     QVERIFY(adapter.payloadForResource(QStringLiteral("pull-request:desktop:109")).has_value());
 }
 
@@ -407,7 +407,7 @@ void TestLocalAzureDevOpsAdapter::testConnection_onPrem_usesConnectionDataEndpoi
 {
     auto transport = std::make_shared<FakeAzureDevOpsApiTransport>();
     transport->documentsByUrl.insert(
-        QStringLiteral("https://devops.example.com/_apis/connectionData?api-version=7.0"),
+        QStringLiteral("https://devops.example.com/_apis/connectionData?api-version=5.0-preview"),
         QJsonDocument(QJsonObject{
             {QStringLiteral("locationServiceData"), QJsonObject{}},
             {QStringLiteral("authenticatedUser"), QJsonObject{
@@ -417,7 +417,7 @@ void TestLocalAzureDevOpsAdapter::testConnection_onPrem_usesConnectionDataEndpoi
         }));
 
     AzureDevOpsConnectionSettings settings = onPremSettings();
-    // No org/project �?should use connectionData endpoint
+    // Without organization or project context, probe the connectionData endpoint.
     LocalAzureDevOpsAdapter adapter(settings, transport);
     QString errorMessage;
 
@@ -460,7 +460,7 @@ void TestLocalAzureDevOpsAdapter::discoverCurrentUser_onPrem_populatesFromConnec
 {
     auto transport = std::make_shared<FakeAzureDevOpsApiTransport>();
     transport->documentsByUrl.insert(
-        QStringLiteral("https://devops.example.com/_apis/connectionData?api-version=7.0"),
+        QStringLiteral("https://devops.example.com/_apis/connectionData?api-version=5.0-preview"),
         QJsonDocument(QJsonObject{
             {QStringLiteral("authenticatedUser"), QJsonObject{
                 {QStringLiteral("id"), QStringLiteral("user-onprem-42")},

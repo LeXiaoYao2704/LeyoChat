@@ -330,9 +330,10 @@ private slots:
         const RuntimeArchitecturePresentation presentation =
             buildRuntimeArchitecturePresentation(0, 0, 0, 0, false, QString());
 
-        QCOMPARE(presentation.chromeStatus, QStringLiteral("未发现服务"));
-        QCOMPARE(presentation.welcomeSummary, QStringLiteral("当前未发现混合架构服务"));
-        QVERIFY(presentation.welcomeDetail.contains(QStringLiteral("P2P")));
+        QCOMPARE(presentation.chromeStatus, QStringLiteral("今日概览"));
+        QCOMPARE(presentation.welcomeSummary, QStringLiteral("选择一个会话开始"));
+        QCOMPARE(presentation.welcomeDetail,
+                 QStringLiteral("从最近消息继续，或者搜索历史记录、图片和链接。"));
         QCOMPARE(presentation.panelSummary, QStringLiteral("当前没有已持久化的服务快照"));
     }
 
@@ -376,10 +377,10 @@ private slots:
         const RuntimeArchitecturePresentation presentation =
             buildRuntimeArchitecturePresentation(snapshot);
 
-        QCOMPARE(presentation.chromeStatus, QStringLiteral("1 个服务"));
-        QCOMPARE(presentation.welcomeSummary, QStringLiteral("已发现 1 个服务，当前已绑定"));
+        QCOMPARE(presentation.chromeStatus, QStringLiteral("1 个协作服务"));
+        QCOMPARE(presentation.welcomeSummary, QStringLiteral("已发现 1 个协作服务，当前已绑定"));
         QVERIFY(presentation.welcomeDetail.contains(QStringLiteral("当前服务 LeyoChat Service")));
-        QCOMPARE(presentation.panelSummary, QStringLiteral("运行时已装载 1 个服务快照"));
+        QCOMPARE(presentation.panelSummary, QStringLiteral("运行时已加载 1 个服务快照"));
         QVERIFY(presentation.panelFootnote.contains(QStringLiteral("已绑定")));
     }
 

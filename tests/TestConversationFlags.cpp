@@ -48,7 +48,7 @@ private slots:
         QVERIFY(!loaded[0].isDone);
     }
 
-    void upsertPreservesFlagsOnUpdate() {
+    void upsertReopensDoneConversationAndPreservesOtherFlags() {
         QTemporaryDir dir;
         QVERIFY(dir.isValid());
         const QString dbPath = dir.filePath(QStringLiteral("flags3.db"));
@@ -58,14 +58,18 @@ private slots:
 
         ConversationRepository repo(conn);
         QVERIFY(repo.upsertConversation(ConversationSummary{L"conv-b", L"Charlie", L"first", 1000}));
+        QVERIFY(repo.setConversationFlag(QStringLiteral("conv-b"), ConversationFlag::Pinned, true));
+        QVERIFY(repo.setConversationFlag(QStringLiteral("conv-b"), ConversationFlag::Starred, true));
         QVERIFY(repo.setConversationFlag(QStringLiteral("conv-b"), ConversationFlag::Done, true));
 
-        // Upsert again (simulates new message arriving) — flags must survive
+        // A new message reopens a closed conversation without losing user settings.
         QVERIFY(repo.upsertConversation(ConversationSummary{L"conv-b", L"Charlie", L"second", 2000}));
 
         const auto loaded = repo.loadConversationSummaries();
         QCOMPARE(loaded.size(), 1u);
-        QVERIFY(loaded[0].isDone);
+        QVERIFY(loaded[0].isPinned);
+        QVERIFY(loaded[0].isStarred);
+        QVERIFY(!loaded[0].isDone);
         QCOMPARE(loaded[0].lastMessagePreview, std::wstring(L"second"));
     }
 

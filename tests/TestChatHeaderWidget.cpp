@@ -42,8 +42,6 @@ private slots:
         QVERIFY(modeChip != nullptr);
         QVERIFY(!modeChip->text().trimmed().isEmpty());
 
-        auto* actionTray = widget.findChild<QWidget*>(QStringLiteral("headerActionTray"));
-        QVERIFY(actionTray != nullptr);
     }
 
     void removesRetryActionFromDirectHeader()

@@ -55,7 +55,7 @@ void TestAzureDevOpsLinkParser::parsesLegacyVisualStudioUrl()
         QStringLiteral("https://example.visualstudio.com/LeyoChat/_workitems/edit/2048"));
 
     QVERIFY(locator.has_value());
-    QCOMPARE(locator->organization, QStringLiteral("leyochat"));
+    QCOMPARE(locator->organization, QStringLiteral("example"));
     QCOMPARE(locator->project, QStringLiteral("LeyoChat"));
     QCOMPARE(locator->resourceId, QStringLiteral("2048"));
 }

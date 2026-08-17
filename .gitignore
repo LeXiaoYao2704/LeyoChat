@@ -42,6 +42,10 @@ moc_*.cpp
 ui_*.h
 qrc_*.cpp
 
+# --- Python 缓存 ---
+__pycache__/
+*.py[cod]
+
 # --- 安装包产物 ---
 *.exe
 !windows/*.ico

@@ -1,0 +1,56 @@
+name: Bug report
+description: Report a reproducible problem in LeyoChat
+title: "[Bug]: "
+labels: [bug]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Do not attach credentials, private messages, databases, logs, or crash dumps without redaction.
+  - type: input
+    id: version
+    attributes:
+      label: Version or commit
+      placeholder: 0.4.0 or commit SHA
+    validations:
+      required: true
+  - type: dropdown
+    id: mode
+    attributes:
+      label: Routing mode
+      options:
+        - P2POnly
+        - ServerPreferred
+        - ServerOnly
+        - Unknown
+    validations:
+      required: true
+  - type: textarea
+    id: environment
+    attributes:
+      label: Environment
+      description: Include Windows edition, Qt/compiler version, and whether the client or service is affected.
+    validations:
+      required: true
+  - type: textarea
+    id: reproduction
+    attributes:
+      label: Reproduction steps
+      placeholder: List the smallest reliable sequence of steps.
+    validations:
+      required: true
+  - type: textarea
+    id: expected
+    attributes:
+      label: Expected and actual behavior
+    validations:
+      required: true
+  - type: checkboxes
+    id: checks
+    attributes:
+      label: Checks
+      options:
+        - label: I searched existing issues.
+          required: true
+        - label: I removed secrets and private data from this report.
+          required: true

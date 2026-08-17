@@ -47,6 +47,9 @@ target_link_libraries(LeyoChatCallSessionTests PRIVATE Qt6::Core Qt6::Test)
 enable_project_warnings(LeyoChatCallSessionTests)
 
 add_test(NAME LeyoChatCallSessionTests COMMAND LeyoChatCallSessionTests)
+set_tests_properties(LeyoChatCallSessionTests PROPERTIES
+    ENVIRONMENT_MODIFICATION "PATH=path_list_prepend:$<TARGET_FILE_DIR:Qt6::Core>;PATH=path_list_prepend:${_mingw_bin_dir}"
+)
 
 add_executable(LeyoChatMarkdownRendererTests
     TestMarkdownRenderer.cpp
@@ -58,6 +61,9 @@ target_link_libraries(LeyoChatMarkdownRendererTests PRIVATE Qt6::Core Qt6::Test 
 enable_project_warnings(LeyoChatMarkdownRendererTests)
 
 add_test(NAME LeyoChatMarkdownRendererTests COMMAND LeyoChatMarkdownRendererTests)
+set_tests_properties(LeyoChatMarkdownRendererTests PROPERTIES
+    ENVIRONMENT_MODIFICATION "PATH=path_list_prepend:$<TARGET_FILE_DIR:Qt6::Core>;PATH=path_list_prepend:$<TARGET_FILE_DIR:md4c>;PATH=path_list_prepend:${_mingw_bin_dir}"
+)
 
 add_executable(LeyoChatResourceRefRouterTests
     TestResourceRefRouter.cpp
@@ -157,7 +163,7 @@ add_executable(LeyoChatAzureDevOpsInsertDialogTests
 )
 
 target_include_directories(LeyoChatAzureDevOpsInsertDialogTests PRIVATE ${CMAKE_CURRENT_SOURCE_DIR}/../src)
-target_link_libraries(LeyoChatAzureDevOpsInsertDialogTests PRIVATE Qt6::Widgets Qt6::Test)
+target_link_libraries(LeyoChatAzureDevOpsInsertDialogTests PRIVATE Qt6::Widgets Qt6::Test ElaWidgetTools)
 enable_project_warnings(LeyoChatAzureDevOpsInsertDialogTests)
 
 add_test(NAME LeyoChatAzureDevOpsInsertDialogTests COMMAND LeyoChatAzureDevOpsInsertDialogTests)
@@ -170,7 +176,7 @@ add_executable(LeyoChatAzureDevOpsNotificationDialogTests
 )
 
 target_include_directories(LeyoChatAzureDevOpsNotificationDialogTests PRIVATE ${CMAKE_CURRENT_SOURCE_DIR}/../src)
-target_link_libraries(LeyoChatAzureDevOpsNotificationDialogTests PRIVATE Qt6::Widgets Qt6::Test)
+target_link_libraries(LeyoChatAzureDevOpsNotificationDialogTests PRIVATE Qt6::Widgets Qt6::Test ElaWidgetTools)
 enable_project_warnings(LeyoChatAzureDevOpsNotificationDialogTests)
 
 add_test(NAME LeyoChatAzureDevOpsNotificationDialogTests COMMAND LeyoChatAzureDevOpsNotificationDialogTests)
@@ -180,9 +186,11 @@ add_executable(LeyoChatAzureDevOpsNotificationDispatcherTests
     ../src/architecture/ResourceReferenceMessage.cpp
     ../src/integrations/AzureDevOpsNotificationContracts.cpp
     ../src/integrations/SharedFileResourceContracts.cpp
+    ../src/network/MessageCodec.cpp
     ../src/services/AzureDevOpsNotificationDispatcher.cpp
     ../src/services/DirectConversationAddressing.cpp
     ../src/services/FileTransferService.cpp
+    ../src/services/OutgoingFileSnapshot.cpp
     ../src/services/GroupService.cpp
     ../src/services/ResourceRefRouter.cpp
     ../src/storage/ConversationRepository.cpp
@@ -269,7 +277,7 @@ add_executable(LeyoChatOutlookNotificationDialogTests
 )
 
 target_include_directories(LeyoChatOutlookNotificationDialogTests PRIVATE ${CMAKE_CURRENT_SOURCE_DIR}/../src)
-target_link_libraries(LeyoChatOutlookNotificationDialogTests PRIVATE Qt6::Widgets Qt6::Test)
+target_link_libraries(LeyoChatOutlookNotificationDialogTests PRIVATE Qt6::Widgets Qt6::Test ElaWidgetTools)
 enable_project_warnings(LeyoChatOutlookNotificationDialogTests)
 
 add_test(NAME LeyoChatOutlookNotificationDialogTests COMMAND LeyoChatOutlookNotificationDialogTests)
@@ -279,9 +287,11 @@ add_executable(LeyoChatOutlookNotificationDispatcherTests
     ../src/architecture/ResourceReferenceMessage.cpp
     ../src/integrations/OutlookNotificationContracts.cpp
     ../src/integrations/SharedFileResourceContracts.cpp
+    ../src/network/MessageCodec.cpp
     ../src/services/DirectConversationAddressing.cpp
     ../src/services/FileTransferService.cpp
     ../src/services/GroupService.cpp
+    ../src/services/OutgoingFileSnapshot.cpp
     ../src/services/OutlookNotificationDispatcher.cpp
     ../src/services/ResourceRefRouter.cpp
     ../src/storage/ConversationRepository.cpp
@@ -308,7 +318,7 @@ add_executable(LeyoChatOutlookNotificationPollerTests
 )
 
 target_include_directories(LeyoChatOutlookNotificationPollerTests PRIVATE ${CMAKE_CURRENT_SOURCE_DIR}/../src)
-target_link_libraries(LeyoChatOutlookNotificationPollerTests PRIVATE Qt6::Core Qt6::Network Qt6::Test)
+target_link_libraries(LeyoChatOutlookNotificationPollerTests PRIVATE Qt6::Core Qt6::Gui Qt6::Network Qt6::Test)
 enable_project_warnings(LeyoChatOutlookNotificationPollerTests)
 
 add_test(NAME LeyoChatOutlookNotificationPollerTests COMMAND LeyoChatOutlookNotificationPollerTests)
@@ -329,6 +339,9 @@ target_link_libraries(LeyoChatAzureDevOpsIntegrationHealthTests PRIVATE Qt6::Cor
 enable_project_warnings(LeyoChatAzureDevOpsIntegrationHealthTests)
 
 add_test(NAME LeyoChatAzureDevOpsIntegrationHealthTests COMMAND LeyoChatAzureDevOpsIntegrationHealthTests)
+set_tests_properties(LeyoChatAzureDevOpsIntegrationHealthTests PROPERTIES
+    ENVIRONMENT_MODIFICATION "PATH=path_list_prepend:$<TARGET_FILE_DIR:Qt6::Network>;PATH=path_list_prepend:$<TARGET_FILE_DIR:Qt6::Core>;PATH=path_list_prepend:${_mingw_bin_dir}"
+)
 
 add_executable(LeyoChatOutlookIntegrationHealthTests
     TestOutlookIntegrationHealth.cpp
@@ -343,7 +356,7 @@ add_executable(LeyoChatOutlookIntegrationHealthTests
 )
 
 target_include_directories(LeyoChatOutlookIntegrationHealthTests PRIVATE ${CMAKE_CURRENT_SOURCE_DIR}/../src)
-target_link_libraries(LeyoChatOutlookIntegrationHealthTests PRIVATE Qt6::Core Qt6::Network Qt6::Test)
+target_link_libraries(LeyoChatOutlookIntegrationHealthTests PRIVATE Qt6::Core Qt6::Gui Qt6::Network Qt6::Test)
 enable_project_warnings(LeyoChatOutlookIntegrationHealthTests)
 
 add_test(NAME LeyoChatOutlookIntegrationHealthTests COMMAND LeyoChatOutlookIntegrationHealthTests)
@@ -603,7 +616,7 @@ add_executable(LeyoChatDevelopmentTestModeTests
 target_include_directories(LeyoChatDevelopmentTestModeTests PRIVATE
     ${CMAKE_CURRENT_SOURCE_DIR}/../src
 )
-target_link_libraries(LeyoChatDevelopmentTestModeTests PRIVATE Qt6::Core Qt6::Test)
+target_link_libraries(LeyoChatDevelopmentTestModeTests PRIVATE Qt6::Core Qt6::Sql Qt6::Test)
 enable_project_warnings(LeyoChatDevelopmentTestModeTests)
 
 add_test(NAME LeyoChatDevelopmentTestModeTests COMMAND LeyoChatDevelopmentTestModeTests)
@@ -643,6 +656,9 @@ target_link_libraries(LeyoChatConnectionRegistryUtilsTests PRIVATE Qt6::Core Qt6
 enable_project_warnings(LeyoChatConnectionRegistryUtilsTests)
 
 add_test(NAME LeyoChatConnectionRegistryUtilsTests COMMAND LeyoChatConnectionRegistryUtilsTests)
+set_tests_properties(LeyoChatConnectionRegistryUtilsTests PROPERTIES
+    ENVIRONMENT_MODIFICATION "PATH=path_list_prepend:$<TARGET_FILE_DIR:Qt6::Core>;PATH=path_list_prepend:${_mingw_bin_dir}"
+)
 
 add_executable(LeyoChatMessageListModelTests
     TestMessageListModel.cpp
@@ -769,8 +785,10 @@ add_executable(LeyoChatGroupServiceTests
     TestGroupService.cpp
     ../src/architecture/ResourceReferenceMessage.cpp
     ../src/integrations/SharedFileResourceContracts.cpp
+    ../src/network/MessageCodec.cpp
     ../src/services/FileTransferService.cpp
     ../src/services/GroupService.cpp
+    ../src/services/OutgoingFileSnapshot.cpp
     ../src/services/ResourceRefRouter.cpp
     ../src/storage/ConversationRepository.cpp
     ../src/storage/DatabaseManager.cpp
@@ -802,8 +820,10 @@ add_executable(LeyoChatGroupResourceRefFanOutTests
     TestGroupResourceRefFanOut.cpp
     ../src/architecture/ResourceReferenceMessage.cpp
     ../src/integrations/SharedFileResourceContracts.cpp
+    ../src/network/MessageCodec.cpp
     ../src/services/FileTransferService.cpp
     ../src/services/GroupService.cpp
+    ../src/services/OutgoingFileSnapshot.cpp
     ../src/services/ResourceRefRouter.cpp
     ../src/storage/ConversationRepository.cpp
     ../src/storage/DatabaseManager.cpp
@@ -1007,6 +1027,9 @@ target_link_libraries(LeyoChatTlsTests PRIVATE Qt6::Core Qt6::Network Qt6::Test)
 enable_project_warnings(LeyoChatTlsTests)
 
 add_test(NAME LeyoChatTlsTests COMMAND LeyoChatTlsTests)
+set_tests_properties(LeyoChatTlsTests PROPERTIES
+    ENVIRONMENT_MODIFICATION "PATH=path_list_prepend:$<TARGET_FILE_DIR:Qt6::Network>;PATH=path_list_prepend:$<TARGET_FILE_DIR:Qt6::Core>;PATH=path_list_prepend:${_mingw_bin_dir}"
+)
 
 add_executable(LeyoChatDelegateTests
     TestDelegates.cpp
@@ -1015,7 +1038,7 @@ add_executable(LeyoChatDelegateTests
 )
 
 target_include_directories(LeyoChatDelegateTests PRIVATE ${CMAKE_CURRENT_SOURCE_DIR}/../src)
-target_link_libraries(LeyoChatDelegateTests PRIVATE Qt6::Widgets Qt6::Test)
+target_link_libraries(LeyoChatDelegateTests PRIVATE Qt6::Widgets Qt6::Test ElaWidgetTools)
 enable_project_warnings(LeyoChatDelegateTests)
 
 add_test(NAME LeyoChatDelegateTests COMMAND LeyoChatDelegateTests)
@@ -1150,7 +1173,7 @@ add_executable(LeyoChatRuntimeArchitectureDialogTests
 )
 
 target_include_directories(LeyoChatRuntimeArchitectureDialogTests PRIVATE ${CMAKE_CURRENT_SOURCE_DIR}/../src)
-target_link_libraries(LeyoChatRuntimeArchitectureDialogTests PRIVATE Qt6::Widgets Qt6::Test)
+target_link_libraries(LeyoChatRuntimeArchitectureDialogTests PRIVATE Qt6::Widgets Qt6::Test ElaWidgetTools)
 enable_project_warnings(LeyoChatRuntimeArchitectureDialogTests)
 
 add_test(NAME LeyoChatRuntimeArchitectureDialogTests COMMAND LeyoChatRuntimeArchitectureDialogTests)
@@ -1161,7 +1184,7 @@ add_executable(LeyoChatContextPanelTests
 )
 
 target_include_directories(LeyoChatContextPanelTests PRIVATE ${CMAKE_CURRENT_SOURCE_DIR}/../src)
-target_link_libraries(LeyoChatContextPanelTests PRIVATE Qt6::Widgets Qt6::Test)
+target_link_libraries(LeyoChatContextPanelTests PRIVATE Qt6::Widgets Qt6::Test ElaWidgetTools)
 enable_project_warnings(LeyoChatContextPanelTests)
 
 add_test(NAME LeyoChatContextPanelTests COMMAND LeyoChatContextPanelTests)
@@ -1185,13 +1208,14 @@ add_executable(LeyoChatWorkbenchPageTests
 )
 
 target_include_directories(LeyoChatWorkbenchPageTests PRIVATE ${CMAKE_CURRENT_SOURCE_DIR}/../src)
-target_link_libraries(LeyoChatWorkbenchPageTests PRIVATE Qt6::Widgets Qt6::Test)
+target_link_libraries(LeyoChatWorkbenchPageTests PRIVATE Qt6::Widgets Qt6::Test ElaWidgetTools)
 enable_project_warnings(LeyoChatWorkbenchPageTests)
 
 add_test(NAME LeyoChatWorkbenchPageTests COMMAND LeyoChatWorkbenchPageTests)
 
 add_executable(LeyoChatInitialSetupPageTests
     TestInitialSetupPage.cpp
+    ../src/app/AppSettings.cpp
     ../src/ui/InitialSetupPage.cpp
     ../src/ui/ClientAppearance.cpp
     ../src/ui/ClientPreferences.cpp
@@ -1202,6 +1226,9 @@ target_link_libraries(LeyoChatInitialSetupPageTests PRIVATE Qt6::Widgets Qt6::Te
 enable_project_warnings(LeyoChatInitialSetupPageTests)
 
 add_test(NAME LeyoChatInitialSetupPageTests COMMAND LeyoChatInitialSetupPageTests)
+set_tests_properties(LeyoChatInitialSetupPageTests PROPERTIES
+    ENVIRONMENT_MODIFICATION "QT_QPA_PLATFORM=set:offscreen;PATH=path_list_prepend:$<TARGET_FILE_DIR:Qt6::Widgets>;PATH=path_list_prepend:$<TARGET_FILE_DIR:ElaWidgetTools>;PATH=path_list_prepend:${_mingw_bin_dir}"
+)
 
 add_executable(LeyoChatLoginDialogTests
     TestLoginDialog.cpp
@@ -1216,6 +1243,9 @@ target_link_libraries(LeyoChatLoginDialogTests PRIVATE Qt6::Widgets Qt6::Sql Qt6
 enable_project_warnings(LeyoChatLoginDialogTests)
 
 add_test(NAME LeyoChatLoginDialogTests COMMAND LeyoChatLoginDialogTests)
+set_tests_properties(LeyoChatLoginDialogTests PROPERTIES
+    ENVIRONMENT_MODIFICATION "QT_QPA_PLATFORM=set:offscreen;PATH=path_list_prepend:$<TARGET_FILE_DIR:Qt6::Widgets>;PATH=path_list_prepend:$<TARGET_FILE_DIR:Qt6::Sql>;PATH=path_list_prepend:$<TARGET_FILE_DIR:ElaWidgetTools>;PATH=path_list_prepend:${_mingw_bin_dir}"
+)
 
 add_executable(LeyoChatMainWindowTests
     TestMainWindow.cpp
@@ -1321,8 +1351,10 @@ add_executable(LeyoChatStage2ExtensionIntegrationTests
     ../src/integrations/DevOpsAdapterContracts.cpp
     ../src/integrations/OutlookAdapterContracts.cpp
     ../src/integrations/SharedFileResourceContracts.cpp
+    ../src/network/MessageCodec.cpp
     ../src/services/FileTransferService.cpp
     ../src/services/GroupService.cpp
+    ../src/services/OutgoingFileSnapshot.cpp
     ../src/services/ResourceRefRouter.cpp
     ../src/storage/ConversationRepository.cpp
     ../src/storage/DatabaseManager.cpp
@@ -1339,37 +1371,9 @@ enable_project_warnings(LeyoChatStage2ExtensionIntegrationTests)
 
 add_test(NAME LeyoChatStage2ExtensionIntegrationTests COMMAND LeyoChatStage2ExtensionIntegrationTests)
 
-add_executable(LeyoChatVisualReview
-    VisualReviewMainWindow.cpp
-    ../src/app/AppSettings.cpp
-    ../src/app/TestModeContext.cpp
-    ../src/ui/MainWindow.cpp
-    ../src/ui/ContactListModel.cpp
-    ../src/ui/MessageListModel.cpp
-    ../src/ui/MessageDeliveryPresentation.cpp
-    ../src/ui/ConversationListModel.cpp
-    ../src/ui/ChatComposerWidget.cpp
-    ../src/ui/ChatHeaderWidget.cpp
-    ../src/ui/ChatWorkspaceWidget.cpp
-    ../src/ui/ConnectIpDialog.cpp
-    ../src/ui/ContextPanel.cpp
-    ../src/ui/CreateGroupDialog.cpp
-    ../src/ui/GroupInfoPanel.cpp
-    ../src/ui/WorkbenchPage.cpp
-    ../src/services/ResourceRefRouter.cpp
-    ../src/ui/TransferListModel.cpp
-    ../src/architecture/HybridRoutingPolicy.cpp
-    ../src/architecture/RuntimeArchitectureQueryService.cpp
-    ../src/architecture/RuntimeArchitecturePresentation.cpp
-    ../src/integrations/RemoteFileServiceSettings.cpp
-)
-
-target_include_directories(LeyoChatVisualReview PRIVATE ${CMAKE_CURRENT_SOURCE_DIR}/../src)
-target_link_libraries(LeyoChatVisualReview PRIVATE Qt6::Widgets Qt6::Network Qt6::Sql Qt6::Test)
-enable_project_warnings(LeyoChatVisualReview)
-
 add_executable(LeyoChatConversationFlagsTests
     TestConversationFlags.cpp
+    ../src/network/MessageCodec.cpp
     ../src/storage/DatabaseManager.cpp
     ../src/storage/ConversationRepository.cpp
     ../src/storage/GroupRepository.cpp
@@ -1411,6 +1415,7 @@ add_test(NAME LeyoChatRemoteMessageEventCursorTests
 
 add_executable(LeyoChatAsyncFlushWorkerTests
     TestAsyncFlushWorker.cpp
+    ../src/network/MessageCodec.cpp
     ../src/storage/DatabaseManager.cpp
     ../src/storage/ConversationRepository.cpp
     ../src/storage/FileTransferRepository.cpp
@@ -1918,6 +1923,7 @@ add_executable(LeyoChatGroupFileTransferTests
     ../src/network/MessageCodec.cpp
     ../src/services/FileTransferService.cpp
     ../src/services/GroupService.cpp
+    ../src/services/OutgoingFileSnapshot.cpp
     ../src/services/ResourceRefRouter.cpp
     ../src/store/ChatDataStore.cpp
     ../src/storage/ConversationRepository.cpp
@@ -1973,11 +1979,11 @@ set_tests_properties(LeyoChatAzureDevOpsNotificationContractsTests PROPERTIES
 )
 
 set_tests_properties(LeyoChatAzureDevOpsInsertDialogTests PROPERTIES
-    ENVIRONMENT_MODIFICATION "QT_QPA_PLATFORM=set:offscreen;PATH=path_list_prepend:$<TARGET_FILE_DIR:Qt6::Widgets>;PATH=path_list_prepend:${_mingw_bin_dir}"
+    ENVIRONMENT_MODIFICATION "QT_QPA_PLATFORM=set:offscreen;PATH=path_list_prepend:$<TARGET_FILE_DIR:Qt6::Widgets>;PATH=path_list_prepend:$<TARGET_FILE_DIR:ElaWidgetTools>;PATH=path_list_prepend:${_mingw_bin_dir}"
 )
 
 set_tests_properties(LeyoChatAzureDevOpsNotificationDialogTests PROPERTIES
-    ENVIRONMENT_MODIFICATION "QT_QPA_PLATFORM=set:offscreen;PATH=path_list_prepend:$<TARGET_FILE_DIR:Qt6::Widgets>;PATH=path_list_prepend:${_mingw_bin_dir}"
+    ENVIRONMENT_MODIFICATION "QT_QPA_PLATFORM=set:offscreen;PATH=path_list_prepend:$<TARGET_FILE_DIR:Qt6::Widgets>;PATH=path_list_prepend:$<TARGET_FILE_DIR:ElaWidgetTools>;PATH=path_list_prepend:${_mingw_bin_dir}"
 )
 
 set_tests_properties(LeyoChatAzureDevOpsNotificationDispatcherTests PROPERTIES
@@ -2005,7 +2011,7 @@ set_tests_properties(LeyoChatOutlookNotificationContractsTests PROPERTIES
 )
 
 set_tests_properties(LeyoChatOutlookNotificationDialogTests PROPERTIES
-    ENVIRONMENT_MODIFICATION "QT_QPA_PLATFORM=set:offscreen;PATH=path_list_prepend:$<TARGET_FILE_DIR:Qt6::Widgets>;PATH=path_list_prepend:${_mingw_bin_dir}"
+    ENVIRONMENT_MODIFICATION "QT_QPA_PLATFORM=set:offscreen;PATH=path_list_prepend:$<TARGET_FILE_DIR:Qt6::Widgets>;PATH=path_list_prepend:$<TARGET_FILE_DIR:ElaWidgetTools>;PATH=path_list_prepend:${_mingw_bin_dir}"
 )
 
 set_tests_properties(LeyoChatOutlookNotificationDispatcherTests PROPERTIES
@@ -2013,7 +2019,11 @@ set_tests_properties(LeyoChatOutlookNotificationDispatcherTests PROPERTIES
 )
 
 set_tests_properties(LeyoChatOutlookNotificationPollerTests PROPERTIES
-    ENVIRONMENT_MODIFICATION "PATH=path_list_prepend:$<TARGET_FILE_DIR:Qt6::Network>;PATH=path_list_prepend:$<TARGET_FILE_DIR:Qt6::Core>;PATH=path_list_prepend:${_mingw_bin_dir}"
+    ENVIRONMENT_MODIFICATION "PATH=path_list_prepend:$<TARGET_FILE_DIR:Qt6::Gui>;PATH=path_list_prepend:$<TARGET_FILE_DIR:Qt6::Network>;PATH=path_list_prepend:$<TARGET_FILE_DIR:Qt6::Core>;PATH=path_list_prepend:${_mingw_bin_dir}"
+)
+
+set_tests_properties(LeyoChatOutlookIntegrationHealthTests PROPERTIES
+    ENVIRONMENT_MODIFICATION "PATH=path_list_prepend:$<TARGET_FILE_DIR:Qt6::Gui>;PATH=path_list_prepend:$<TARGET_FILE_DIR:Qt6::Network>;PATH=path_list_prepend:$<TARGET_FILE_DIR:Qt6::Core>;PATH=path_list_prepend:${_mingw_bin_dir}"
 )
 
 set_tests_properties(LeyoChatSharedFileResourceContractsTests PROPERTIES
@@ -2161,6 +2171,14 @@ set_tests_properties(LeyoChatGlobalSearchPanelTests PROPERTIES
     ENVIRONMENT_MODIFICATION "QT_QPA_PLATFORM=set:offscreen;PATH=path_list_prepend:$<TARGET_FILE_DIR:Qt6::Widgets>;PATH=path_list_prepend:$<TARGET_FILE_DIR:ElaWidgetTools>;PATH=path_list_prepend:${_mingw_bin_dir}"
 )
 
+set_tests_properties(
+    LeyoChatRuntimeArchitectureDialogTests
+    LeyoChatContextPanelTests
+    LeyoChatWorkbenchPageTests
+    PROPERTIES
+    ENVIRONMENT_MODIFICATION "QT_QPA_PLATFORM=set:offscreen;PATH=path_list_prepend:$<TARGET_FILE_DIR:Qt6::Widgets>;PATH=path_list_prepend:$<TARGET_FILE_DIR:ElaWidgetTools>;PATH=path_list_prepend:${_mingw_bin_dir}"
+)
+
 set_tests_properties(LeyoChatFileTransferServiceSourceTests PROPERTIES
     ENVIRONMENT_MODIFICATION "PATH=path_list_prepend:$<TARGET_FILE_DIR:Qt6::Core>;PATH=path_list_prepend:${_mingw_bin_dir}"
 )
@@ -2170,11 +2188,11 @@ set_tests_properties(LeyoChatFileTransferServiceTests PROPERTIES
 )
 
 set_tests_properties(LeyoChatDelegateTests PROPERTIES
-    ENVIRONMENT_MODIFICATION "QT_QPA_PLATFORM=set:offscreen;PATH=path_list_prepend:$<TARGET_FILE_DIR:Qt6::Widgets>;PATH=path_list_prepend:${_mingw_bin_dir}"
+    ENVIRONMENT_MODIFICATION "QT_QPA_PLATFORM=set:offscreen;PATH=path_list_prepend:$<TARGET_FILE_DIR:Qt6::Widgets>;PATH=path_list_prepend:$<TARGET_FILE_DIR:ElaWidgetTools>;PATH=path_list_prepend:${_mingw_bin_dir}"
 )
 
 set_tests_properties(LeyoChatChatHeaderWidgetTests PROPERTIES
-    ENVIRONMENT_MODIFICATION "PATH=path_list_prepend:$<TARGET_FILE_DIR:Qt6::Widgets>;PATH=path_list_prepend:${_mingw_bin_dir}"
+    ENVIRONMENT_MODIFICATION "QT_QPA_PLATFORM=set:offscreen;PATH=path_list_prepend:$<TARGET_FILE_DIR:Qt6::Widgets>;PATH=path_list_prepend:$<TARGET_FILE_DIR:ElaWidgetTools>;PATH=path_list_prepend:${_mingw_bin_dir}"
 )
 
 set_tests_properties(LeyoChatChatComposerWidgetTests PROPERTIES
@@ -2237,7 +2255,11 @@ set_tests_properties(LeyoChatSharedFileResourceSyncTests PROPERTIES
 )
 
 set_tests_properties(LeyoChatDiagnosticsTests PROPERTIES
-    ENVIRONMENT_MODIFICATION "PATH=path_list_prepend:$<TARGET_FILE_DIR:Qt6::Core>;PATH=path_list_prepend:${_mingw_bin_dir}"
+    ENVIRONMENT_MODIFICATION "PATH=path_list_prepend:$<TARGET_FILE_DIR:Qt6::Sql>;PATH=path_list_prepend:$<TARGET_FILE_DIR:Qt6::Core>;PATH=path_list_prepend:${_mingw_bin_dir}"
+)
+
+set_tests_properties(LeyoChatDevelopmentTestModeTests PROPERTIES
+    ENVIRONMENT_MODIFICATION "PATH=path_list_prepend:$<TARGET_FILE_DIR:Qt6::Sql>;PATH=path_list_prepend:$<TARGET_FILE_DIR:Qt6::Core>;PATH=path_list_prepend:${_mingw_bin_dir}"
 )
 
 set_tests_properties(LeyoChatLanDiscoveryTests PROPERTIES
@@ -2391,17 +2413,19 @@ add_executable(LeyoChatFileServiceHttpServerFoldersTests
     ../src/fileservice/FileServiceDatabase.cpp
     ../src/fileservice/FileServiceHttpServer.cpp
     ../src/fileservice/FileStorageManager.cpp
+    ../src/fileservice/WopiHandler.cpp
+    ../src/fileservice/OnlyOfficeCallbackHandler.cpp
 )
 target_include_directories(LeyoChatFileServiceHttpServerFoldersTests
     PRIVATE ${CMAKE_CURRENT_SOURCE_DIR}/../src)
 target_link_libraries(LeyoChatFileServiceHttpServerFoldersTests
-    PRIVATE Qt6::Core Qt6::HttpServer Qt6::Network Qt6::Sql Qt6::Test)
+    PRIVATE Qt6::Core Qt6::Concurrent Qt6::HttpServer Qt6::Network Qt6::Sql Qt6::Test)
 enable_project_warnings(LeyoChatFileServiceHttpServerFoldersTests)
 add_test(NAME LeyoChatFileServiceHttpServerFoldersTests
     COMMAND LeyoChatFileServiceHttpServerFoldersTests)
 
 set_tests_properties(LeyoChatFileServiceHttpServerFoldersTests PROPERTIES
-    ENVIRONMENT_MODIFICATION "PATH=path_list_prepend:$<TARGET_FILE_DIR:Qt6::HttpServer>;PATH=path_list_prepend:$<TARGET_FILE_DIR:Qt6::Network>;PATH=path_list_prepend:$<TARGET_FILE_DIR:Qt6::Sql>;PATH=path_list_prepend:$<TARGET_FILE_DIR:Qt6::Core>;PATH=path_list_prepend:${_mingw_bin_dir}"
+    ENVIRONMENT_MODIFICATION "PATH=path_list_prepend:$<TARGET_FILE_DIR:Qt6::Concurrent>;PATH=path_list_prepend:$<TARGET_FILE_DIR:Qt6::HttpServer>;PATH=path_list_prepend:$<TARGET_FILE_DIR:Qt6::Network>;PATH=path_list_prepend:$<TARGET_FILE_DIR:Qt6::Sql>;PATH=path_list_prepend:$<TARGET_FILE_DIR:Qt6::Core>;PATH=path_list_prepend:${_mingw_bin_dir}"
 )
 
 add_executable(LeyoChatGroupFileTableModelTests
@@ -2448,9 +2472,12 @@ add_executable(TestChatDataStore
     ../src/ui/PinyinHelper.cpp
 )
 target_include_directories(TestChatDataStore PRIVATE ${CMAKE_CURRENT_SOURCE_DIR}/../src)
-target_link_libraries(TestChatDataStore PRIVATE Qt6::Core Qt6::Sql Qt6::Widgets Qt6::Test)
+target_link_libraries(TestChatDataStore PRIVATE Qt6::Core Qt6::Sql Qt6::Widgets Qt6::Test ElaWidgetTools)
 enable_project_warnings(TestChatDataStore)
 add_test(NAME TestChatDataStore COMMAND TestChatDataStore)
+set_tests_properties(TestChatDataStore PROPERTIES
+    ENVIRONMENT_MODIFICATION "QT_QPA_PLATFORM=set:offscreen;PATH=path_list_prepend:$<TARGET_FILE_DIR:Qt6::Widgets>;PATH=path_list_prepend:$<TARGET_FILE_DIR:Qt6::Sql>;PATH=path_list_prepend:$<TARGET_FILE_DIR:ElaWidgetTools>;PATH=path_list_prepend:$<TARGET_FILE_DIR:Qt6::Core>;PATH=path_list_prepend:${_mingw_bin_dir}"
+)
 
 add_executable(TestDatabaseWorker
     TestDatabaseWorker.cpp

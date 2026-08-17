@@ -499,7 +499,7 @@ ConversationsPage::ConversationsPage(MainWindow* mainWindow, QWidget* parent)
     conversationsHeaderCardLayout->setContentsMargins(0, 0, 0, 0);
     conversationsHeaderCardLayout->setSpacing(8);
 
-    // ͷ���У�[��Ϣ xx] [δ�� xx] [ɸѡ��ť]
+    // Header row: conversation count, unread count, and filter control.
     auto* conversationsTitleRow = new QHBoxLayout;
     conversationsTitleRow->setContentsMargins(0, 0, 0, 0);
     conversationsTitleRow->setSpacing(8);
@@ -1477,8 +1477,6 @@ ConversationsPage::ConversationsPage(MainWindow* mainWindow, QWidget* parent)
         cfg.sync();
     });
 
-    // ���� �ֶ����Ӱ�ť����ϵ��ҳ�ײ�����������������������������������������������������
-
     m_hostEdit->hide();
     m_portEdit->hide();
     m_connectButton->hide();
@@ -2449,7 +2447,7 @@ void ConversationsPage::onConversationItemContextMenu(const QString& convId,
 {
     if (convId.isEmpty()) return;
 
-    // �� model ��ȡ״̬
+    // Resolve the current state from the conversation model.
     if (!m_conversationModel) return;
     QModelIndex idx;
     for (int row = 0; row < m_conversationModel->rowCount(); ++row) {
@@ -3676,14 +3674,14 @@ void ConversationsPage::syncConversationWorkspaceStatus()
         m_mainWindow->setNavGroupUnreadCount(groupUnreadCount);
     }
 
-    // ģʽ chip����ʾ "��Ϣ xx" �� "Ⱥ�� xx"
+    // The mode chip shows either the direct-message or group-chat count.
     const QString modeText = m_groupWorkspaceMode
                                  ? QStringLiteral("\u7FA4\u804A %1").arg(totalCount)
                                  : QStringLiteral("\u6D88\u606F %1").arg(totalCount);
     m_conversationsModeChip->setText(modeText);
     m_conversationsModeChip->setMinimumWidth(0);
 
-    // ״̬ chip����δ��ʱ��ʾ "δ�� xx"����������
+    // Show the status chip only when unread conversations exist.
     if (unreadCount > 0) {
         const QString statusText = QStringLiteral("\u672A\u8BFB %1").arg(unreadCount);
         m_conversationsStatusChip->setText(statusText);
@@ -4909,9 +4907,6 @@ void ConversationsPage::submitCurrentComposer() {
 // ======================================================================
 
 bool ConversationsPage::eventFilter(QObject* watched, QEvent* event) {
-    // �Ự�б�ͷ����ͣ �� �� widget ģʽ�²�����Ҫ viewport eventFilter
-    // ͷ����ͣ������ ConversationItemWidget ����������TODO: �������ӣ�
-
     // 置顶卡片关闭按钮定位
     if (event && event->type() == QEvent::Resize) {
         auto* frame = qobject_cast<QFrame*>(watched);

@@ -1,0 +1,70 @@
+name: Windows CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: windows-ci-${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  focused-build-and-test:
+    runs-on: windows-2022
+    timeout-minutes: 45
+    steps:
+      - name: Check out source
+        uses: actions/checkout@v4
+
+      - name: Install Qt
+        uses: jurplel/install-qt-action@v4
+        with:
+          version: 6.6.3
+          arch: win64_msvc2019_64
+          modules: qtmultimedia qthttpserver
+          cache: true
+
+      - name: Load MSVC environment
+        uses: ilammy/msvc-dev-cmd@v1
+        with:
+          arch: x64
+
+      - name: Configure
+        shell: pwsh
+        run: >-
+          cmake -S . -B build-ci -G "Visual Studio 17 2022" -A x64
+          -DLEYOCHAT_BUILD_TESTS=ON
+
+      - name: Build client, service, and focused tests
+        shell: pwsh
+        run: >-
+          cmake --build build-ci --config Release --clean-first --parallel 2
+          --target LeyoChat LeyoChatLauncher LeyoChatService LeyoChatServiceHost
+          LeyoChatApplicationInfoTests LeyoChatRemoteMessageEventCursorTests
+          LeyoChatLocalAzureDevOpsAdapterTests
+          LeyoChatRemoteChatServiceSettingsTests LeyoChatTransportPolicyTests
+          LeyoChatP2PConnectionPolicyTests LeyoChatMessageSyncServiceTests
+          LeyoChatRemoteMessageSyncCoordinatorTests
+          LeyoChatRemoteMessageEventConsumerTests
+          LeyoChatRemoteMessageDeviceIdentityTests
+          LeyoChatReliableDirectMessageSenderTests
+          LeyoChatDirectMessageP2PIntegrationTests
+          LeyoChatReliableDirectEnvelopeSenderTests
+          LeyoChatApplicationRoutingSourceTests
+          LeyoChatSynchronousNetworkReplyLifetimeSourceTests
+          LeyoChatReliableGroupMessageSenderTests
+          LeyoChatReliableGroupEnvelopeSenderTests
+          LeyoChatReliableGroupFileMessageSenderTests
+          LeyoChatGroupFanOutDeliveryTests LeyoChatFileTransferServiceTests
+
+      - name: Run focused communication, packaging, and transfer tests
+        shell: pwsh
+        run: >-
+          ctest --test-dir build-ci -C Release
+          -R "ApplicationInfo|RemoteMessageEventCursor|LocalAzureDevOpsAdapter|RemoteChatServiceSettings|TransportPolicy|P2PConnectionPolicy|MessageSyncService|RemoteMessageSyncCoordinator|RemoteMessageEventConsumer|RemoteMessageDeviceIdentity|ReliableDirect|DirectMessageP2P|ApplicationRoutingSource|SynchronousNetworkReplyLifetime|ReliableGroup|GroupFanOutDelivery|Packaging|LeyoChatFileTransferServiceTests$"
+          --output-on-failure
