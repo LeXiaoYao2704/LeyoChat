@@ -15943,8 +15943,10 @@ int LeyoApplication::run() {
                     });
             }
 
+#ifdef LEYOCHAT_HAS_WEBENGINE
             // 预热 WebEngine，缩短后续 Office 预览打开延迟（~2-3s）
             OnlineEditorWidget::warmUp();
+#endif
 
             GroupFileManagerDialog dlg(groupId, config, localClientId,
                                       localDisplayName.isEmpty() ? localClientId : localDisplayName,
