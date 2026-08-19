@@ -3,6 +3,8 @@
 [![Windows CI](https://github.com/LeXiaoYao2704/LeyoChat/actions/workflows/windows-ci.yml/badge.svg)](https://github.com/LeXiaoYao2704/LeyoChat/actions/workflows/windows-ci.yml)
 [![License: Apache-2.0](https://img.shields.io/badge/license-Apache--2.0-blue.svg)](LICENSE)
 
+[简体中文](README.zh-CN.md)
+
 LeyoChat is a Windows-first desktop communication client built with C++20,
 Qt 6, and CMake. It supports LAN peer-to-peer messaging and an optional
 self-hosted service for durable delivery, offline synchronization, group
